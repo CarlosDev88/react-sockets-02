@@ -1,11 +1,17 @@
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
+import { SocketContext } from '../context/SocketContext';
 
-export function BandList({ data,vote,deleteBand,changeNameEvent }) {
-    const [bands, setBands] = useState(data);
+export function BandList() {
+    const [bands, setBands] = useState([]);
+
+    const { socket } = useContext(SocketContext);
 
     useEffect(() => {
-        setBands(data);        
-    }, [data])
+        socket.on('current-bands', bands => {
+            setBands(bands);
+        })
+        return ()=> socket.off('current-bands');
+    }, [socket])
 
     function changeName(event, id) {
         const newName = event.target.value;
@@ -19,8 +25,19 @@ export function BandList({ data,vote,deleteBand,changeNameEvent }) {
 
     }
 
-    function onBlurField(id, name) {               
-        changeNameEvent(id,name);        
+    function onBlurField(id, name) {
+        socket.emit('cambiar-nombre-banda', {
+            id,
+            name
+        });
+    }
+
+    function vote(id) {
+        socket.emit('votar-banda', id);
+    }
+
+    function deleteBand(id) {
+        socket.emit('borrar-banda', id);
     }
 
     function createRows() {
@@ -28,7 +45,7 @@ export function BandList({ data,vote,deleteBand,changeNameEvent }) {
             bands.map(band => (
                 <tr key={band.id}>
                     <td>
-                        <button className='btn btn-primary' onClick={()=>vote(band.id)}>+1</button>
+                        <button className='btn btn-primary' onClick={() => vote(band.id)}>+1</button>
                     </td>
                     <td>
                         <input
@@ -36,13 +53,13 @@ export function BandList({ data,vote,deleteBand,changeNameEvent }) {
                             className='form-control'
                             value={band.name}
                             onChange={(event) => changeName(event, band.id)}
-                            onBlur={() => onBlurField(band.id,band.name)}
+                            onBlur={() => onBlurField(band.id, band.name)}
                         />
                     </td>
                     <td><h3>{band.votes}</h3></td>
                     <td>
-                        <button 
-                            onClick={()=>deleteBand(band.id)}
+                        <button
+                            onClick={() => deleteBand(band.id)}
                             className='btn btn-danger'>borrar</button>
                     </td>
                 </tr>

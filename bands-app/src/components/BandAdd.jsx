@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
+import { SocketContext } from "../context/SocketContext";
 
-function BandAdd({createBand}) {
+function BandAdd() {
     const [value, setvalue] = useState('');
+    const { socket } = useContext(SocketContext);
 
     function onSubmit(ev){
         ev.preventDefault();
     
-        if(value.trim().length > 0){
-            createBand(value);
+        if(value.trim().length > 0){   
+            socket.emit('nueva-banda', { name:value });
             setvalue('');
         }
     }
